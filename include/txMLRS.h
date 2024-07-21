@@ -15,7 +15,6 @@ class txMLRS {
     bool _msgReady;
     char _buf[BUF_SIZE];
     unsigned long _transmit_ms;
-    unsigned long _last_received_ms;
     void flushRX();
     void clear();
     void addc(uint8_t c);

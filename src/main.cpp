@@ -72,14 +72,6 @@ void serialFlushRx(void)
     SERIAL_INTERFACE.read();
   }
 }
-
-// void WiFiStationConnected(WiFiEvent_t event, WiFiEventInfo_t info){
-//   IPAddress ip(info.got_ip.ip_info.ip.addr);
-//   logD(TAG, "Station connected IP Add = %s", ip.toString());
-//   udp->addIP(ip);
-// }
- 
-
 void setup()
 {
   Serial.begin(115200);
@@ -87,13 +79,11 @@ void setup()
   esp_log_level_set("*", ESP_LOG_VERBOSE);
   size_t rxbufsize = SERIAL_INTERFACE.setRxBufferSize(2 * 1024); // must come before uart started, retuns 0 if it fails
   size_t txbufsize = SERIAL_INTERFACE.setTxBufferSize(512);      // must come before uart started, retuns 0 if it fails
-  // SERIAL_INTERFACE.begin(baudrate);
   SERIAL_INTERFACE.begin(baudrate, SERIAL_8N1, SERIAL_RXD, SERIAL_TXD);
   tx = new txMLRS(CLI_PIN, &SERIAL_INTERFACE);
   udp = new UDPServer(&SERIAL_INTERFACE, UDP_PORT);
   udp->setDestIP(IPAddress(192, 168, 4, 255));
 
-  // WiFi.onEvent(WiFiStationConnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED);
   WiFi.mode(WIFI_AP); // seems not to be needed, done by WiFi.softAP()?
   WiFi.softAPConfig(ip, ip_gateway, netmask);
   String ssid_full = ssid + " UDP";
@@ -111,49 +101,8 @@ void setup()
 
 void loop()
 {
-
-  // unsigned long tnow_ms = millis();
-
-  // if (is_connected && (tnow_ms - is_connected_tlast_ms > 2000))
-  // { // nothing from GCS for 2 secs
-  //   is_connected = false;
-  // }
-
-  // if (tnow_ms - led_tlast_ms > (is_connected ? 500 : 200))
-  // {
-  //   led_tlast_ms = tnow_ms;
-  //   led_state = !led_state;
-  // }
-  // uint8_t buf[256]; // working buffer
-
-  // int packetSize = udp.parsePacket();
-  // if (packetSize)
-  // {
-  //   int len = udp.read(buf, sizeof(buf));
-  //   SERIAL_INTERFACE.write(buf, len);
-  //   is_connected = true;
-  //   is_connected_tlast_ms = millis();
-  // }
-
-  // tnow_ms = millis(); // may not be relevant, but just update it
-  // int avail = SERIAL_INTERFACE.available();
-  // if (avail <= 0)
-  // {
-  //   serial_data_received_tfirst_ms = tnow_ms;
-  // }
-  // else if ((tnow_ms - serial_data_received_tfirst_ms) > 10 || avail > 128)
-  // { // 10 ms at 57600 bps corresponds to 57 bytes, no chance for 128 bytes
-  //   serial_data_received_tfirst_ms = tnow_ms;
-
-  //   int len = SERIAL_INTERFACE.read(buf, sizeof(buf));
-  //   udp.beginPacket(ip_udp, port_udp);
-  //   udp.write(buf, len);
-  //   udp.endPacket();
-  // }
   if (!tx->isActive())
   {
     udp->loop();
   }
-  api->handleClient();
-  tx->loop();
 }

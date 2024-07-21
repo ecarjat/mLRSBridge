@@ -1,63 +1,59 @@
 #include "RestAPI.h"
 
-RestAPI::RestAPI(txMLRS *txMLRS, int port) : _txMLRS(txMLRS), WebServer(port)
+void RestAPI::jsonCommand(AsyncWebServerRequest *request, JsonVariant &json)
 {
-    setupRouting();
-}
-
-
-void RestAPI::command()
-{
-    if (hasArg("plain") == false)
+    if (not json.is<JsonObject>())
     {
-        // handle error here
+        request->send(400, "text/plain", "Not an object");
+        return;
     }
-    String body = arg("plain");
-    deserializeJson(_jsonDocument, body);
-    const char *commandLine = _jsonDocument["command"];
-    logD(REST_TAG, "commandline: %s", commandLine);
-    if (commandLine == NULL)
-        return;
-    if (strlen(commandLine) <= 1)
-        return;
-    if (strcmp("restart", commandLine) == 0)
+    auto &&data = json.as<JsonObject>();
+
+    if (not data["command"].is<String>())
     {
-        send(200, "application/json", "{\"command\":\"ok\"}");
+       request->send(400, "application/json", "{\"response\":\"no command\"}");
+        return;
+    }
+    String commandLine = data["command"].as<String>();
+    if (commandLine.isEmpty()){
+        request->send(400, "application/json", "{\"response\":\"no command\"}");
+        return;
+    }
+    if (commandLine == "restart")
+    {
+        request->send(200, "application/json", "{\"command\":\"ok\"}");
         ESP.restart();
-    } else {
-        _txMLRS->sendCommand(commandLine);
-        unsigned long timeout = millis() + 5000;
+    }
+    else
+    {
+        _txMLRS->sendCommand(commandLine.c_str());
+        unsigned long timeout = millis() + 3000;
         while (!_txMLRS->msgReady() && timeout > millis())
         {
             _txMLRS->loop();
         }
-        logD(REST_TAG, "received response: %s", _txMLRS->response());
-        send(200, "application/json", "{\"response\":\"" + _txMLRS->response() + "\"}");
+        request->send(200, "application/json", "{\"response\":\"" + _txMLRS->response() + "\"}");
     }
 }
 
-
-void RestAPI::data()
+RestAPI::RestAPI(txMLRS *txMLRS, int port) : _txMLRS(txMLRS), AsyncWebServer(port)
 {
-    _jsonDocument.clear(); // Clear json buffer
-    // if (_drybox->hasStarted())
-    // {
-    //     Sensor *s = _drybox->getHeater()->getSensor();
-    //     add_json_object("temperature", s->getTemp(), "°C");
-    //     add_json_object("targetTemp", _drybox->getHeater()->getTargetTemp(), "°C");
-    //     add_json_object("heatPower", _drybox->getHeater()->getPower() / 255 * 100, "%");
-    //     add_json_object("humidity", s->getHumidity(), "%");
-    //     add_json_object("fanPower", _drybox->getFan()->getSpeed(), "%");
-    //     add_json_object("autotune", _drybox->getHeater()->tuning(), "bool");
-    // }
-    // else
-    // {
-    //     add_json_object("started", false, "bool");
-    // }
-    //serializeJson(_jsonDocument, buffer);
-    send(200, "application/json", buffer);
-}
+    AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler(
+        "/command",
+        [this](AsyncWebServerRequest *request, JsonVariant &json)
+        { this->jsonCommand(request, json); });
+    addHandler(handler);
 
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    onNotFound([](AsyncWebServerRequest *request)
+               {
+        if (request->method() == HTTP_OPTIONS) {
+            request->send(200);
+        } else {
+            request->send(404);
+    } });
+    begin();
+}
 
 void RestAPI::create_json(char *tag, float value, char *unit)
 {
@@ -82,31 +78,4 @@ void RestAPI::add_json_object(const char *tag, String value, const char *unit)
     obj["type"] = tag;
     obj["value"] = value;
     obj["unit"] = unit;
-}
-
-void RestAPI::setCrossOrigin()
-{
-    sendHeader(F("Access-Control-Max-Age"), F("600"));
-    sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
-    sendHeader(F("Access-Control-Allow-Headers"), F("*"));
-};
-
-void RestAPI::sendCrossOriginHeader()
-{
-    log_d("sendCORSHeader");
-    sendHeader(F("access-control-allow-credentials"), F("false"));
-    setCrossOrigin();
-    send(204);
-}
-
-void RestAPI::setupRouting()
-{
-    on("/data", [this]()
-       { this->data(); });
-    on("/command", [this]()
-       { this->command(); });
-    on("/command", HTTP_OPTIONS, [this]()
-       { this->sendCrossOriginHeader(); });
-    enableCORS(true);
-    begin();
 }

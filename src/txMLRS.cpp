@@ -54,8 +54,11 @@ size_t txMLRS::sendCommand(const char *command)
     clear();
     _msgReady = false;
     // set transmit time
-    _transmit_ms = _last_received_ms = millis();
-    return _serial->write(command);
+    _transmit_ms = millis();
+    _serial->flush();
+    size_t nb = _serial->write(command);
+    _serial->flush();
+    return nb;
 }
 
 void txMLRS::loop()
@@ -67,17 +70,17 @@ void txMLRS::loop()
         {
             uint8_t c = _serial->read();
             addc(c);
-            _last_received_ms = millis();
+            _transmit_ms = millis();
         }
         // if I haven't received new char for the last second
-        if (millis() > _last_received_ms + 1000 && old_pos == _pos)
+        if (millis() > _transmit_ms + 1500 && old_pos == _pos)
         {
             setCli(false);
             if (_pos > 0)
             {
                 _msgReady = true;
             }
-            logD(TXMLRS_TAG, "received chars: %d ", _pos);
+            logD(TXMLRS_TAG, "received chars: %d", _pos);
         }
     }
 }
