@@ -20,13 +20,12 @@
 #include "driver/gpio.h"
 
 #include "esp_err.h"
-#include "esp_vfs.h"
 #include "esp_system.h"
 #include "esp_spiffs.h"
 
 #include "esp_event.h"
 #include "esp_wifi.h"
-#include "esp_http_server.h"
+
 
 #include "nvs_flash.h"
 #include "logger.h"
@@ -34,34 +33,11 @@
 //Macro for error checking
 #define IS_ESP_OK(x) if ((x) != ESP_OK) break;
 
-#define TXD_PIN (GPIO_NUM_4) //(GPIO_NUM_1)
-#define RXD_PIN (GPIO_NUM_5) //(GPIO_NUM_3)
-#define UART_BAUD_RATE 115200
 #define UART_BUF_SIZE 1024
-#define UART_CONTROLLER UART_NUM_1
-
-#define RESET_PIN (GPIO_NUM_19) //(GPIO_NUM_12)
-#define BOOT0_PIN (GPIO_NUM_21) //(GPIO_NUM_2)
-#define HIGH 1
-#define LOW 0
 
 #define ACK 0x79
 #define SERIAL_TIMEOUT 5000
 
-#define FILE_PATH_MAX 128
-#define BASE_PATH "/spiffs/"
-
-//Initialize UART functionalities
-void initFlashUART(void);
-
-//Initialize GPIO functionalities
-void initGPIO(void);
-
-//Initialize SPIFFS functionalities
-void initSPIFFS(void);
-
-//Reset the STM32Fxx
-void resetSTM(void);
 
 //Increment the memory address for the next write operation
 void incrementLoadAddress(char *loadAddr);
@@ -69,49 +45,49 @@ void incrementLoadAddress(char *loadAddr);
 //End the connection with STM32Fxx
 void endConn(void);
 
-//Get in sync with STM32Fxx
-int cmdSync(void);
+//Get in sync with STM32
+int cmdSync(uint8_t nb_uart);
 
 //Get the version and the allowed commands supported by the current version of the bootloader
-int cmdGet(void);
+int cmdGet(uint8_t nb_uart);
 
 //Get the bootloader version and the Read Protection status of the Flash memory
-int cmdVersion(void);
+int cmdVersion(uint8_t nb_uart);
 
 //Get the chip ID
-int cmdId(void);
+int cmdId(uint8_t nb_uart);
 
 //Erase from one to all the Flash memory pages
-int cmdErase(void);
+int cmdErase(uint8_t nb_uart);
 
 //Erases from one to all the Flash memory pages using 2-byte addressing mode
-int cmdExtErase(void);
+int cmdExtErase(uint8_t nb_uart);
 
 //Setup STM32Fxx for the 'flashing' process
-void setupSTM(void);
+void setupSTM(uint8_t nb_uart);
 
 //Write data to flash memory address
-int cmdWrite(void);
+int cmdWrite(uint8_t nb_uart);
 
 //Read data from flash memory address
-int cmdRead(void);
+int cmdRead(uint8_t nb_uart);
 
 //UART send data to STM32Fxx & wait for response
-int sendBytes(const char *bytes, int count, int resp);
+int sendBytes(uint8_t nb_uart, const char *bytes, int count, int resp);
 
 //UART send data byte-by-byte to STM32Fxx
-int sendData(const char *logName, const char *data, const int count);
+int sendData(uint8_t nb_uart, const char *logName, const char *data, const int count);
 
 //Wait for response from STM32Fxx
-int waitForSerialData(int dataCount, int timeout);
+int waitForSerialData(uint8_t nb_uart, int dataCount, int timeout);
 
 //Send the STM32Fxx the memory address, to be written
-int loadAddress(const char adrMS, const char adrMI, const char adrLI, const char adrLS);
+int loadAddress(uint8_t nb_uart, const char adrMS, const char adrMI, const char adrLI, const char adrLS);
 
 //UART write the flash memory address of the STM32Fxx with blocks of data 
-esp_err_t flashPage(const char *address, const char *data);
+esp_err_t flashPage(uint8_t nb_uart, const char *address, const char *data);
 
 //UART read the flash memory address of the STM32Fxx and verify with the given block of data 
-esp_err_t readPage(const char *address, const char *data);
+esp_err_t readPage(uint8_t nb_uart, const char *address, const char *data);
 
 #endif

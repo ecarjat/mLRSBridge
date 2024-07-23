@@ -1,7 +1,11 @@
 #ifndef _STM_FLASH_H
 #define _STM_FLASH_H
 
+#include <Arduino.h>
+#include <FS.h>
+#include "logger.h"
 #include "stm_pro_mode.h"
+
 
 /**
  * @brief Write the code into the flash memory of STM32Fxx
@@ -13,7 +17,7 @@
  *   
  * @return ESP_OK - success, ESP_FAIL - failed
  */
-esp_err_t writeTask(FILE *flash_file);
+esp_err_t writeTask(uint8_t nb_uart, File *flash_file);
 
 /**
  * @brief Read the flash memory of the STM32Fxx, for verification
@@ -25,15 +29,6 @@ esp_err_t writeTask(FILE *flash_file);
  *   
  * @return ESP_OK - success, ESP_FAIL - failed
  */
-esp_err_t readTask(FILE *flash_file);
-
-/**
- * @brief Flash the .bin file passed, to STM32Fxx, with read verification
- * 
- * @param file_name name of the .bin to be flashed
- *   
- * @return ESP_OK - success, ESP_FAIL - failed
- */
-esp_err_t flashSTM(const char *file_name);
+esp_err_t readTask(uint8_t nb_uart, File *flash_file);
 
 #endif

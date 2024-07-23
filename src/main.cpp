@@ -12,17 +12,22 @@
 #include "RestAPI.h"
 #include "UDPServer.h"
 
-#define SERIAL_RXD 16 // = RX2
-#define SERIAL_TXD 17 // = TX2
+
 #define CLI_PIN 5
 #define UDP_PORT 14550
 
+
+
 #ifdef ARDUINO_LOLIN_C3_MINI
+#define NB_UART 1
 #define SERIAL_INTERFACE Serial1
 #endif
 
 #ifdef ARDUINO_ESP32_DEV
+#define NB_UART 2
 #define SERIAL_INTERFACE Serial2
+#define SERIAL_RXD 16 // = RX2
+#define SERIAL_TXD 17 // = TX2
 #endif
 
 
@@ -80,7 +85,7 @@ void setup()
   size_t rxbufsize = SERIAL_INTERFACE.setRxBufferSize(2 * 1024); // must come before uart started, retuns 0 if it fails
   size_t txbufsize = SERIAL_INTERFACE.setTxBufferSize(512);      // must come before uart started, retuns 0 if it fails
   SERIAL_INTERFACE.begin(baudrate, SERIAL_8N1, SERIAL_RXD, SERIAL_TXD);
-  tx = new txMLRS(CLI_PIN, &SERIAL_INTERFACE);
+  tx = new txMLRS(CLI_PIN, &SERIAL_INTERFACE, NB_UART, SERIAL_TXD, SERIAL_RXD);
   udp = new UDPServer(&SERIAL_INTERFACE, UDP_PORT);
   udp->setDestIP(IPAddress(192, 168, 4, 255));
 
