@@ -6,6 +6,8 @@ This project based on https://github.com/olliw42/mLRS/tree/main/esp enables adva
 - access to the CLI when using a firmware that enables the CLI based on a PIN being driven low.
 - flashing of the firmware on the mLRS TX
 
+This currently only has been tested on the [easysolder board](https://github.com/olliw42/mLRS-docu/blob/master/docs/E77_EASYSOLDER.md) and requires a special firmware that can compiled by downloading [this fork](https://github.com/ecarjat/mLRS) of mLRS 
+
 ## Mavlink bridge ##
 
 Connect to mLRS AP UDP wifi AP. The bridge broadcasts UDP messages from the tx and send the GCS messages back to the tx via UDP.
@@ -43,6 +45,7 @@ Firmware flashing is done using a simple webserver located on the ESP32. The ser
 The firmware is first uploaded to the ESP32 and then flashed to the tx module. 
 
 In order for the flashing to work a firmware that inverts the standard TX/RX and the JR pins first needs to be flashed. This is because the serial boot pins of the STM32 are located on PB6/PB7.
+
 
 ## Wiring ##
 
