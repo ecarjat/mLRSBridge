@@ -11,7 +11,7 @@ RestAPI::RestAPI(txMLRS *txMLRS, int port) : _txMLRS(txMLRS), AsyncWebServer(por
     }
     // JSON handler
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler(
-        "/command",
+        "/api/v1/cli",
         [this](AsyncWebServerRequest *request, JsonVariant &json)
         { this->jsonCommand(request, json); });
     addHandler(handler);
@@ -35,6 +35,12 @@ RestAPI::RestAPI(txMLRS *txMLRS, int port) : _txMLRS(txMLRS), AsyncWebServer(por
     this->flashFirmware();
     request->send(200, "text/html", flash_html, RestAPI::processor); });
 
+    // Flashing firmware
+    on("/flash", HTTP_GET, [this](AsyncWebServerRequest *request)
+       {
+    logD(REST_TAG, "Client: %s %s", request->client()->remoteIP().toString(), request->url());
+    request->send(200, "text/html", flash_html, RestAPI::processor); });
+
     // process upload file
     on("/upload", HTTP_POST, [](AsyncWebServerRequest *request)
        { request->send(200); }, [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
@@ -51,14 +57,13 @@ RestAPI::RestAPI(txMLRS *txMLRS, int port) : _txMLRS(txMLRS), AsyncWebServer(por
     begin();
 }
 
-void RestAPI::flashFirmware(){
-    logD(REST_TAG, "%s", "flashing firmware");
-    File flash_file = SPIFFS.open("/firmware.bin", "rb");
-    _txMLRS->flash(&flash_file);
+void RestAPI::flashFirmware()
+{
+    _txMLRS->flash("/firmware.bin");
 }
 
 /**
- * @brief 
+ * @brief
  * source: https://github.com/smford/esp32-asyncwebserver-fileupload-example/blob/master/example-01/example-01.ino
  */
 void RestAPI::handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
@@ -101,31 +106,42 @@ void RestAPI::jsonCommand(AsyncWebServerRequest *request, JsonVariant &json)
     }
     auto &&data = json.as<JsonObject>();
 
-    if (not data["command"].is<String>())
+    if (data["write"].is<String>())
     {
-        request->send(400, "application/json", "{\"response\":\"no command\"}");
-        return;
+
+        String commandLine = data["write"].as<String>();
+        if (commandLine.isEmpty())
+        {
+            request->send(400, "application/json", "{\"response\":\"no command\"}");
+            return;
+        }
+        if (commandLine == "restart")
+        {
+            request->send(200, "application/json", "{\"response\":\"restart\"}");
+            ESP.restart();
+        }
+        else
+        {
+             vTaskSuspendAll();
+            _txMLRS->sendCommand(commandLine.c_str());
+            xTaskResumeAll();
+            request->send(200, "application/json", "{\"response\":\"ok\"}");
+        }
     }
-    String commandLine = data["command"].as<String>();
-    if (commandLine.isEmpty())
+    else if (data["read"].is<String>())
     {
-        request->send(400, "application/json", "{\"response\":\"no command\"}");
-        return;
-    }
-    if (commandLine == "restart")
-    {
-        request->send(200, "application/json", "{\"command\":\"ok\"}");
-        ESP.restart();
+        if (_txMLRS->msgReady())
+        {
+            request->send(200, "application/json", "{\"response\":\"" + String(_txMLRS->response()) + "\"}");
+        }
+        else {
+            request->send(200, "application/json", "{\"response\":\"not ready\"}");
+        }
     }
     else
     {
-        _txMLRS->sendCommand(commandLine.c_str());
-        unsigned long timeout = millis() + 3000;
-        while (!_txMLRS->msgReady() && timeout > millis())
-        {
-            _txMLRS->loop();
-        }
-        request->send(200, "application/json", "{\"response\":\"" + _txMLRS->response() + "\"}");
+        request->send(400, "application/json", "{\"response\":\"no command\"}");
+        return;
     }
 }
 
@@ -169,7 +185,7 @@ String RestAPI::humanReadableSize(const size_t bytes)
 }
 
 /**
- * @brief 
+ * @brief
  * source: https://github.com/smford/esp32-asyncwebserver-fileupload-example/blob/master/example-01/example-01.ino
  */
 String RestAPI::processor(const String &var)
@@ -187,6 +203,11 @@ String RestAPI::processor(const String &var)
     if (var == "TOTALSPIFFS")
     {
         return RestAPI::humanReadableSize(SPIFFS.totalBytes());
+    }
+
+    if (var == "FLASHINGSTATUS")
+    {
+        return String(txMLRS::getFlashStatus());
     }
 
     return String();

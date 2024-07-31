@@ -1,6 +1,7 @@
 // ############################################
 //  Based off
 //  mLRS Wireless Bridge for ESP32
+//  https://github.com/olliw42/mLRS/tree/main/esp
 //  Copyright (c) www.olliw.eu, OlliW, OlliW42
 //  License: GPL v3
 //  https://www.gnu.org/licenses/gpl-3.0.de.html
@@ -10,13 +11,9 @@
 #include "logger.h"
 #include "txMLRS.h"
 #include "RestAPI.h"
-#include "UDPServer.h"
-
 
 #define CLI_PIN 5
 #define UDP_PORT 14550
-
-
 
 #ifdef ARDUINO_LOLIN_C3_MINI
 #define NB_UART 1
@@ -35,8 +32,6 @@
 static const char *TAG = "MAIN";
 String ssid = "mLRS AP"; // Wifi name
 String password = "";    // "thisisgreat"; // WiFi password, "" makes it an open AP
-
-
 
 int port_tcp = 5760; // connect to this port per TCP // MissionPlanner default is 5760
 // WiFi channel
@@ -60,7 +55,6 @@ int baudrate = 115200;
 IPAddress ip(192, 168, 4, 55); // connect to this IP // MissionPlanner default is 127.0.0.1, so enter
 IPAddress ip_gateway(0, 0, 0, 0);
 IPAddress netmask(255, 255, 255, 0);
-UDPServer *udp;
 txMLRS *tx;
 RestAPI *api;
 
@@ -82,12 +76,8 @@ void setup()
   Serial.begin(115200);
   delay(1000);
   esp_log_level_set("*", ESP_LOG_VERBOSE);
-  size_t rxbufsize = SERIAL_INTERFACE.setRxBufferSize(2 * 1024); // must come before uart started, retuns 0 if it fails
-  size_t txbufsize = SERIAL_INTERFACE.setTxBufferSize(512);      // must come before uart started, retuns 0 if it fails
-  SERIAL_INTERFACE.begin(baudrate, SERIAL_8N1, SERIAL_RXD, SERIAL_TXD);
-  tx = new txMLRS(CLI_PIN, &SERIAL_INTERFACE, NB_UART, SERIAL_TXD, SERIAL_RXD);
-  udp = new UDPServer(&SERIAL_INTERFACE, UDP_PORT);
-  udp->setDestIP(IPAddress(192, 168, 4, 255));
+  
+  tx = new txMLRS(CLI_PIN, NB_UART, SERIAL_TXD, SERIAL_RXD, IPAddress(192, 168, 4, 255), UDP_PORT);
 
   WiFi.mode(WIFI_AP); // seems not to be needed, done by WiFi.softAP()?
   WiFi.softAPConfig(ip, ip_gateway, netmask);
@@ -98,16 +88,11 @@ void setup()
 
   logD(TAG, "ap ip address: %s", WiFi.softAPIP().toString());
   
-  udp->begin();
-  serialFlushRx();
   tx->begin();
   api = new RestAPI(tx, 80);
 }
 
 void loop()
 {
-  if (!tx->isActive())
-  {
-    udp->loop();
-  }
+  tx->loop();
 }

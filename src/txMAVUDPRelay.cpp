@@ -1,16 +1,15 @@
-#include "UDPServer.h"
+#include "txMAVUDPRelay.h"
 
-void UDPServer::setDestIP(IPAddress ip)
+void txMAVUDPRelay::setDestIP(IPAddress ip)
 {
     _dest_ip = ip;
 }
 
-void UDPServer::loop()
+void txMAVUDPRelay::loop()
 {
     unsigned long tnow_ms = millis();
 
     uint8_t buf[256]; // working buffer
-    // uint8_t mav_msg[256];
 
     int packetSize = parsePacket();
     if (packetSize)

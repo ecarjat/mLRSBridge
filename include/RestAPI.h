@@ -50,9 +50,10 @@ static const char flash_html[] PROGMEM = R"rawliteral(
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="5">
 </head>
 <body>
-  <p><h1>Firmware flashed</h1></p>
+  <p><h1>%FLASHINGSTATUS%</h1></p>
   <p>Free Storage: %FREESPIFFS% | Used Storage: %USEDSPIFFS% | Total Storage: %TOTALSPIFFS%</p>
 </body>
 </html>

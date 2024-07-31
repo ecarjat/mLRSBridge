@@ -1,12 +1,12 @@
-#ifndef UDPSERVER_H
-#define UDPSERVER_H
+#ifndef txMAVUDPRelay_H
+#define txMAVUDPRelay_H
 #include <Arduino.h>
 #include <WiFi.h>
 #include "logger.h"
 
-static const char *UDPSERVER_TAG = "UDPSERVER";
+static const char *UDPSERVER_TAG = "TXMAVUDPRELAY";
 
-class UDPServer : public WiFiUDP {
+class txMAVUDPRelay : public WiFiUDP {
 
     int _port;
     HardwareSerial *_serial;
@@ -16,7 +16,7 @@ class UDPServer : public WiFiUDP {
 
 
 public:
-    UDPServer(HardwareSerial *serial, int port) : _serial(serial),_port(port) {}
+    txMAVUDPRelay(HardwareSerial *serial, int port) : _serial(serial),_port(port) {}
     void setDestIP(IPAddress ip);
     // IPAddress *getIPs(){return _gcs_ips;}
     // uint8_t getNbIPs() { return _nbIPs; }
