@@ -27,8 +27,6 @@
 #define SERIAL_TXD 17 // = TX2
 #endif
 
-
-
 static const char *TAG = "MAIN";
 String ssid = "mLRS AP"; // Wifi name
 String password = "";    // "thisisgreat"; // WiFi password, "" makes it an open AP
@@ -76,7 +74,7 @@ void setup()
   Serial.begin(115200);
   delay(1000);
   esp_log_level_set("*", ESP_LOG_VERBOSE);
-  
+
   tx = new txMLRS(CLI_PIN, NB_UART, SERIAL_TXD, SERIAL_RXD, IPAddress(192, 168, 4, 255), UDP_PORT);
 
   WiFi.mode(WIFI_AP); // seems not to be needed, done by WiFi.softAP()?
@@ -84,10 +82,10 @@ void setup()
   String ssid_full = ssid + " UDP";
   WiFi.softAP(ssid_full.c_str(), (password.length()) ? password.c_str() : NULL, wifi_channel); // channel = 1 is default
   WiFi.softAP(ssid_full.c_str(), (password.length()) ? password.c_str() : NULL, wifi_channel); // channel = 1 is default
-  WiFi.setTxPower(WIFI_POWER); // set WiFi power, AP or STA must have been started, returns false if it fails
+  WiFi.setTxPower(WIFI_POWER);                                                                 // set WiFi power, AP or STA must have been started, returns false if it fails
 
   logD(TAG, "ap ip address: %s", WiFi.softAPIP().toString());
-  
+
   tx->begin();
   api = new RestAPI(tx, 80);
 }

@@ -35,8 +35,8 @@ SOFTWARE.
 static const char *TXMLRS_TAG = "TXMLRS";
 static const char *TAG_STM_FLASH = "stm_flash";
 
-
-class txMLRS {
+class txMLRS
+{
     friend class STMFlash;
     const uint8_t _pin;
     HardwareSerial *_serial;
@@ -56,11 +56,11 @@ class txMLRS {
     bool _hasCommand = false;
     int _pos = 0;
     int _maxBuf = BUF_SIZE;
-    //bool _cli = false;
+    // bool _cli = false;
     bool _msgReady;
     char _buf[BUF_SIZE];
     unsigned long _transmit_ms;
-    const char * _firmware_path;
+    const char *_firmware_path;
     taskList _task;
     static long _pct_complete;
     void flushRX();
@@ -72,33 +72,36 @@ public:
     void begin();
     void sendCommand(const char *command);
     void setCli(bool activate);
-    //bool isActive() { return _task == CLI; }
+    // bool isActive() { return _task == CLI; }
     bool msgReady() { return _msgReady; }
-    const char* response() {return _msgReady ? _buf : ""; }
+    const char *response() { return _msgReady ? _buf : ""; }
     void loop();
-    void flash(const char * path);
-    static void setFlashStatus(long percent) { 
-        _pct_complete = percent; 
-        }
-    static long getFlashStatus() {
-        return _pct_complete; }
+    void flash(const char *path);
+    static void setFlashStatus(long percent)
+    {
+        _pct_complete = percent;
+    }
+    static long getFlashStatus()
+    {
+        return _pct_complete;
+    }
 
-        /*
-        Imported from
-        https://github.com/ESP32-Musings/OTA_update_STM32_using_ESP32
-        Copyright (c) 2020 Laukik Hase
-        */
-        /**
-         * @brief Write the code into the flash memory of STM32Fxx
-         *
-         * The data from the .bin file is written into the flash memory
-         * of the client, block-by-block
-         *
-         * @param flash_file File pointer of the .bin file to be flashed
-         *
-         * @return ESP_OK - success, ESP_FAIL - failed
-         */
-        esp_err_t writeTask(File *f);
+    /*
+    Imported from
+    https://github.com/ESP32-Musings/OTA_update_STM32_using_ESP32
+    Copyright (c) 2020 Laukik Hase
+    */
+    /**
+     * @brief Write the code into the flash memory of STM32Fxx
+     *
+     * The data from the .bin file is written into the flash memory
+     * of the client, block-by-block
+     *
+     * @param flash_file File pointer of the .bin file to be flashed
+     *
+     * @return ESP_OK - success, ESP_FAIL - failed
+     */
+    esp_err_t writeTask(File *f);
 
     /**
      * @brief Read the flash memory of the STM32Fxx, for verification

@@ -59,25 +59,23 @@ static const char flash_html[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-
 #define JSONSIZE 2048
 
 class RestAPI : public AsyncWebServer
 {
-
-    txMLRS *_txMLRS;
-    void jsonCommand(AsyncWebServerRequest *request, JsonVariant &json);
-    StaticJsonDocument<JSONSIZE> _jsonDocument;
-    char buffer[JSONSIZE];
-    void create_json(char *tag, float value, char *unit);
-    void add_json_object(const char *tag, float value, const char *unit);
-    void add_json_object(const char *tag, String value, const char *unit);
-    void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-    void flashFirmware();
+  txMLRS *_txMLRS;
+  void jsonCommand(AsyncWebServerRequest *request, JsonVariant &json);
+  StaticJsonDocument<JSONSIZE> _jsonDocument;
+  char buffer[JSONSIZE];
+  void create_json(char *tag, float value, char *unit);
+  void add_json_object(const char *tag, float value, const char *unit);
+  void add_json_object(const char *tag, String value, const char *unit);
+  void handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
+  void flashFirmware();
 
 public:
-    RestAPI(txMLRS *txMLRS, int port = 80);
-    static String humanReadableSize(const size_t bytes);
-    static String processor(const String &var);
+  RestAPI(txMLRS *txMLRS, int port = 80);
+  static String humanReadableSize(const size_t bytes);
+  static String processor(const String &var);
 };
 #endif

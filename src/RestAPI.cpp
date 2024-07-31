@@ -122,7 +122,7 @@ void RestAPI::jsonCommand(AsyncWebServerRequest *request, JsonVariant &json)
         }
         else
         {
-             vTaskSuspendAll();
+            vTaskSuspendAll();
             _txMLRS->sendCommand(commandLine.c_str());
             xTaskResumeAll();
             request->send(200, "application/json", "{\"response\":\"ok\"}");
@@ -134,7 +134,8 @@ void RestAPI::jsonCommand(AsyncWebServerRequest *request, JsonVariant &json)
         {
             request->send(200, "application/json", "{\"response\":\"" + String(_txMLRS->response()) + "\"}");
         }
-        else {
+        else
+        {
             request->send(200, "application/json", "{\"response\":\"not ready\"}");
         }
     }

@@ -127,7 +127,7 @@ void txMLRS::loop()
         // }
     case FLASH:
     {
-        if (strlen(_firmware_path)==0)
+        if (strlen(_firmware_path) == 0)
         {
             logD(TXMLRS_TAG, "%s", "Firmware is null");
             _task = BRIDGE;
@@ -147,7 +147,7 @@ void txMLRS::loop()
         delay(31);
         _serial->end();
         digitalWrite(_pin, HIGH);
-        //pinMode(_pin, INPUT); // check if this can be deleted ?
+        // pinMode(_pin, INPUT); // check if this can be deleted ?
         const uart_config_t uart_config = {
             .baud_rate = 115200,
             .data_bits = UART_DATA_8_BITS,
